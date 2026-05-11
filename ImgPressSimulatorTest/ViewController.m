@@ -45,6 +45,12 @@
 @property (nonatomic, assign) CGFloat totalCompressedSizeKB;
 @property (nonatomic, assign) NSInteger failedCount;
 
+// Thresholds
+@property (nonatomic, assign) CGFloat minCompressedSizeKB;
+@property (nonatomic, assign) CGFloat maxCompressedSizeKB;
+@property (nonatomic, assign) NSInteger minLongEdge;
+@property (nonatomic, assign) NSInteger maxLongEdge;
+
 @end
 
 @implementation ViewController
@@ -63,6 +69,12 @@
     _reportPath = [_documentsDirectory stringByAppendingPathComponent:@"compression_report.txt"];
     
     _failedItems = [NSMutableArray array];
+    
+    // 初始化阈值设定
+    _minCompressedSizeKB = 200.0;
+    _maxCompressedSizeKB = 600.0;
+    _minLongEdge = 256;
+    _maxLongEdge = 4096;
     
     [self setupUI];
     [self showLoading];
@@ -96,7 +108,8 @@
     _conditionLabel.textColor = [UIColor whiteColor];
     _conditionLabel.textAlignment = NSTextAlignmentCenter;
     _conditionLabel.numberOfLines = 0;
-    _conditionLabel.text = @"质量阈值 - 最小:300KB 最大:600KB 最小长边:256 最大长边:4096";
+    _conditionLabel.text = [NSString stringWithFormat:@"质量阈值 - 最小:%.0fKB 最大:%.0fKB 最小长边:%ld 最大长边:%ld",
+                            _minCompressedSizeKB, _maxCompressedSizeKB, (long)_minLongEdge, (long)_maxLongEdge];
     [_headerView addSubview:_conditionLabel];
     
     // 统计标签
@@ -263,11 +276,6 @@
 - (void)runCompressionTest {
     NSLog(@"=== 开始压缩测试 ===");
     
-    CGFloat minCompressedSizeKB = 300.0;
-    CGFloat maxCompressedSizeKB = 600.0;
-    NSInteger minLongEdge = 256;
-    NSInteger maxLongEdge = 4096;
-    
     NSFileManager *fm = [NSFileManager defaultManager];
     [fm createDirectoryAtPath:_outputDir withIntermediateDirectories:YES attributes:nil error:nil];
     
@@ -284,7 +292,7 @@
         return;
     }
     
-    NSArray *imageExtensions = @[@"jpg", @"jpeg", @"png", @"gif"];
+    NSArray *imageExtensions = @[@"jpg", @"jpeg", @"png", @"heic"];
     NSMutableArray *imageFiles = [NSMutableArray array];
     
     for (NSString *file in files) {
@@ -305,7 +313,7 @@
     [report appendFormat:@"检测目录：%@\n", [_inputDir lastPathComponent]];
     [report appendFormat:@"图片数量：%lu\n", (unsigned long)imageFiles.count];
     [report appendFormat:@"质量阈值 - 最小:%.0fKB 最大:%.0fKB 最小长边:%ld 最大长边:%ld\n",
-     minCompressedSizeKB, maxCompressedSizeKB, (long)minLongEdge, (long)maxLongEdge];
+     _minCompressedSizeKB, _maxCompressedSizeKB, (long)_minLongEdge, (long)_maxLongEdge];
     [report appendString:@"\n"];
     
     for (NSString *file in imageFiles) {
@@ -328,7 +336,7 @@
         NSInteger originalMaxEdge = MAX(originalWidth, originalHeight);
         
         CGFloat originalSizeKB = (CGFloat)originalSize / 1024.0;
-        BOOL originalValid = (originalSizeKB >= minCompressedSizeKB && originalMaxEdge >= minLongEdge);
+        BOOL originalValid = (originalSizeKB >= _minCompressedSizeKB && originalMaxEdge >= _minLongEdge);
         
         NSError *compressError = nil;
         ImageCompressionManager *manager = [ImageCompressionManager sharedManager];
@@ -346,8 +354,8 @@
             NSInteger minCompressedEdge = MIN(compressedWidth, compressedHeight);
             NSInteger maxCompressedEdge = MAX(compressedWidth, compressedHeight);
             
-            BOOL sizeInRange = (compressedSizeKB >= minCompressedSizeKB && compressedSizeKB <= maxCompressedSizeKB);
-            BOOL edgeValid = (minCompressedEdge >= minLongEdge && maxCompressedEdge <= maxLongEdge);
+            BOOL sizeInRange = (compressedSizeKB >= _minCompressedSizeKB && compressedSizeKB <= _maxCompressedSizeKB);
+            BOOL edgeValid = (minCompressedEdge >= _minLongEdge && maxCompressedEdge <= _maxLongEdge);
             
             if (originalValid && (!sizeInRange || !edgeValid)) {
                 // 只有不合格的图片才保存

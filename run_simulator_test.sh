@@ -178,12 +178,16 @@ mkdir -p "$INPUT_DIR"
 
 # 复制图片到模拟器（直接复制文件）
 IMAGE_COUNT=0
-for img in "$IMAGE_DIR"/*.{jpg,jpeg,png}; do
+# 启用大小写不敏感匹配
+shopt -s nocaseglob
+for img in "$IMAGE_DIR"/*.{jpg,jpeg,png,heic}; do
     if [ -f "$img" ]; then
         cp "$img" "$INPUT_DIR/"
         IMAGE_COUNT=$((IMAGE_COUNT + 1))
     fi
 done
+# 恢复大小写敏感匹配
+shopt -u nocaseglob
 
 echo "已复制 $IMAGE_COUNT 张图片"
 echo ""
