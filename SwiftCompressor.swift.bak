@@ -1,0 +1,19 @@
+//
+//  SwiftCompressor.swift
+//  ImgPressSimulatorTest
+//
+//  Created by Computer on 09/05/26.
+//
+
+import UIKit
+
+@objc class SwiftCompressor: NSObject, ImageCompressorProtocol {
+
+    @objc func compressImage(_ image: UIImage, error: NSErrorPointer) -> Data? {
+        return image.jpegData(compressionQuality: 0.8)
+    }
+
+    @objc func compressorName() -> String {
+        return "SwiftCompressor"
+    }
+}
