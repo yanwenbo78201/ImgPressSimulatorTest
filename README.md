@@ -12,7 +12,7 @@ ImgPressSimulatorTest/
 │   ├── ObjcImgPressAnTool.h/m         # 默认图片压缩工具类
 │   ├── ImageCompressionManager.h/m    # 压缩管理器（支持切换压缩算法）
 │   └── ImageCompressorProtocol.h      # 压缩器协议
-├── wallpapers/                        # 测试图片目录
+├── wallpapers/                        # 测试图片目录（214张示例图片）
 ├── simulator_output/                  # 输出目录（自动生成）
 │   ├── compression_report.txt         # 压缩报告
 │   └── compressed/                    # 不合格压缩图片
@@ -48,10 +48,10 @@ xcode-select --install
 # 进入项目目录
 cd ImgPressSimulatorTest
 
-# 运行自动化测试脚本
+# 运行自动化测试脚本（使用默认 wallpapers 目录）
 ./run_simulator_test.sh
 
-# 或者指定图片目录
+# 或者指定自定义图片目录
 ./run_simulator_test.sh /path/to/your/images
 ```
 
@@ -62,15 +62,22 @@ cd ImgPressSimulatorTest
 - **压缩报告**: `simulator_output/compression_report.txt`
 - **不合格图片**: `simulator_output/compressed/`
 
+## 🖼️ 支持的图片格式
+
+脚本和应用支持以下图片格式（大小写不敏感）：
+- JPG / JPEG
+- PNG
+- HEIC
+
 ## 📱 界面说明
 
 iOS 应用启动后会自动执行压缩测试：
 
-1. **Loading 阶段**：显示"压缩中"提示框
+1. **Loading 阶段**：显示"压缩中"提示框（延迟3秒后开始）
 2. **结果展示**：
-   - 红色 Header 区域（固定）：显示标题和压缩条件
-   - 统计信息：图片数量、不合格数量、压缩率
-   - 可滚动列表：不合格图片详细信息
+   - 红色 Header 区域（固定）：显示标题和动态压缩条件
+   - 统计信息：压缩器名称、图片数量、不合格数量、压缩率
+   - 可滚动列表：不合格图片详细信息（文件名、原始大小/尺寸、压缩后大小/尺寸、输出路径）
 
 ## ⚠️ 常见错误及解决方案
 
@@ -243,14 +250,17 @@ sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 18.5/IPHONEOS_DEPLOYMENT_TARGET = 15.0
 
 ## ⚙️ 配置说明
 
-### 压缩参数（在 ViewController.m 中修改）
+### 压缩参数（在 ViewController.m 的 viewDidLoad 方法中修改）
 
 ```objc
-CGFloat minCompressedSizeKB = 300.0;  // 最小压缩后大小（KB）
-CGFloat maxCompressedSizeKB = 600.0;  // 最大压缩后大小（KB）
-NSInteger minLongEdge = 256;          // 最小长边像素
-NSInteger maxLongEdge = 4096;         // 最大长边像素
+// 在 viewDidLoad 中初始化阈值属性
+_minCompressedSizeKB = 200.0;   // 最小压缩后大小（KB）
+_maxCompressedSizeKB = 600.0;   // 最大压缩后大小（KB）
+_minLongEdge = 256;             // 最小长边像素
+_maxLongEdge = 4096;            // 最大长边像素
 ```
+
+> **注意**：阈值会动态显示在应用界面的 Header 区域，修改后无需手动更新界面文本。
 
 ### 添加自定义压缩器
 
@@ -269,8 +279,8 @@ NSInteger maxLongEdge = 4096;         // 最大长边像素
 ```
 === 压缩质量不合格报告 ===
 检测目录：input_images
-图片数量：206
-质量阈值 - 最小:300KB 最大:600KB 最小长边:256 最大长边:4096
+图片数量：214
+质量阈值 - 最小:200KB 最大:600KB 最小长边:256 最大长边:4096
 
 --- wallhaven-xxx.png ---
   原始大小：3517.38 KB
